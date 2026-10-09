@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Energy House · Local preview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 32px; font-family: system-ui, sans-serif; background: #0d1018; color: #e9edf5; }
+    header, main, footer { max-width: 1140px; margin-inline: auto; }
+    header { margin-bottom: 24px; }
+    h1 { font-size: 24px; font-weight: 600; letter-spacing: -.04em; margin: 8px 0; }
+    p { color: #929aaa; font-size: 14px; line-height: 1.6; margin: 0; }
+    .tag { color: #8edcc0; font-size: 11px; letter-spacing: .15em; text-transform: uppercase; }
+    main { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 24px; align-items: start; }
+    energy-house-card { display: block; width: 100%; }
+    form { background: #151a25; border: 1px solid #232a38; border-radius: 16px; padding: 16px; display: grid; gap: 18px; }
+    fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; }
+    legend { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #8f98ac; margin-bottom: 8px; }
+    label { display: grid; grid-template-columns: 92px 1fr auto; align-items: center; gap: 10px; font-size: 13px; color: #c5ccd8; }
+    label[hidden] { display: none; }
+    select { width: 100%; background: #0f131c; color: #e9edf5; border: 1px solid #2b3344; border-radius: 8px; padding: 6px 8px; font: inherit; }
+    input[type=range] { width: 100%; accent-color: #8edcc0; }
+    input[type=checkbox] { justify-self: start; accent-color: #8edcc0; width: 16px; height: 16px; }
+    output { font-variant-numeric: tabular-nums; font-size: 12px; color: #8f98ac; min-width: 58px; text-align: right; }
+    .readout { display: flex; justify-content: space-between; font-size: 13px; color: #c5ccd8; padding-top: 4px; border-top: 1px solid #232a38; }
+    .readout output { color: #4fc3f7; }
+    button { background: #232a38; color: #e9edf5; border: 0; border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; cursor: pointer; }
+    #error { color: #ff8a80; font-size: 12px; margin: 0; }
+    #error:empty { display: none; }
+    details { margin-top: 18px; }
+    summary { cursor: pointer; font-size: 13px; color: #8f98ac; }
+    pre { background: #151a25; border: 1px solid #232a38; border-radius: 12px; padding: 14px; font-size: 12px; overflow: auto; color: #c5ccd8; }
+    footer { padding-top: 24px; font-size: 12px; color: #7d879a; }
+    @media (max-width: 760px) { body { padding: 18px; } main { grid-template-columns: 1fr; } }
+    .preview-mobile body { padding: 18px; }
+    .preview-mobile main { grid-template-columns: 1fr; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="tag">Standalone · synthetic data only</div>
+    <h1>A little view of your energy.</h1>
+    <p>Switch equipment and drag the readings. The card itself stays read-only; these controls only exist in this preview.</p>
+  </header>
+  <main>
+    <section>
+      <energy-house-card id="playground"></energy-house-card>
+      <details>
+        <summary>Generated card configuration</summary>
+        <pre id="yaml"></pre>
+      </details>
+    </section>
+    <form id="controls" onsubmit="return false">
+      <fieldset>
+        <legend>Equipment</legend>
+        <label>Solar <select name="solar"><option value="roof">Roof</option><option value="ground">Ground array</option><option value="both">Roof + ground</option><option value="none">None</option></select></label>
+        <label>Battery <select name="battery"><option value="wall">Wall unit</option><option value="rack">Rack</option><option value="none">None</option></select></label>
+        <label>Car <select name="car"><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="none">None</option></select></label>
+        <label data-needs="car=sedan|suv">Car color <select name="carColor">
+          <option value="#ecebe6">Pearl white</option><option value="#15171a">Solid black</option><option value="#5b6168">Midnight silver</option>
+          <option value="#1f3a6e">Deep blue</option><option value="#b5121b">Ultra red</option><option value="#a7abb0">Quicksilver</option>
+        </select></label>
+        <label>Grid pole <input type="checkbox" name="grid"></label>
+        <label>Heat pump <input type="checkbox" name="heatPump"></label>
+        <label>Roof <select name="roof"><option value="#3d4b5c">Slate</option><option value="#436353">Green</option><option value="#8a4b3a">Terracotta</option><option value="#2a2d33">Charcoal</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>Scene</legend>
+        <label>Time <select name="time"><option value="day">Day</option><option value="night">Night</option></select></label>
+        <label>Weather <select name="weather"><option value="clear">Clear</option><option value="rain">Rain</option></select></label>
+      </fieldset>
+      <fieldset>
+        <legend>Readings</legend>
+        <label data-needs="solar=roof|both">Roof solar <input type="range" name="solarW" min="0" max="10000" step="100"><output for="solarW"></output></label>
+        <label data-needs="solar=ground|both">Ground solar <input type="range" name="groundW" min="0" max="8000" step="100"><output for="groundW"></output></label>
+        <label>Home <input type="range" name="homeW" min="0" max="6000" step="50"><output for="homeW"></output></label>
+        <label data-needs="battery=wall|rack">Battery <input type="range" name="batteryW" min="-5000" max="5000" step="100"><output for="batteryW"></output></label>
+        <label data-needs="battery=wall|rack">Battery SOC <input type="range" name="batterySoc" min="0" max="100"><output for="batterySoc"></output></label>
+        <label data-needs="car=sedan|suv">Car charge <input type="range" name="carW" min="0" max="11000" step="100"><output for="carW"></output></label>
+        <label data-needs="car=sedan|suv">Car SOC <input type="range" name="carSoc" min="0" max="100"><output for="carSoc"></output></label>
+        <label data-needs="heatPump">Heat pump <input type="range" name="pumpW" min="0" max="3000" step="50"><output for="pumpW"></output></label>
+        <div class="readout"><span>Grid (balance)</span><output id="grid-out"></output></div>
+      </fieldset>
+      <p id="error"></p>
+      <button type="button" id="reset">Reset</button>
+    </form>
+  </main>
+  <footer>Every line runs into the house, which distributes power: grid and solar can feed the home, battery, car and heat pump. Battery: negative = charging. All assets and scripts are local; no Home Assistant connection.</footer>
+  <script src="preview.js"></script>
+  <script src="../energy-house-card.js"></script>
+  <script src="preview-tests.js"></script>
+</body>
+</html>

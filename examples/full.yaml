@@ -1,0 +1,27 @@
+# Every piece of equipment. Remove the lines you don't have; the matching
+# equipment and cables disappear from the fixed scene.
+type: custom:energy-house-card
+title: Energy
+entities:
+  grid: sensor.grid_power                  # + import / − export
+  home: sensor.home_power
+  solar: sensor.roof_solar_power           # rooftop panels
+  solar_ground: sensor.ground_solar_power  # ground-mounted array
+  battery_power: sensor.battery_power      # + discharging / − charging
+  battery_soc: sensor.battery_soc
+  car_power: sensor.car_charge_power       # + charging
+  car_soc: sensor.car_soc
+  heat_pump: sensor.heat_pump_power
+  weather: weather.home                    # only used with weather_effects
+invert:
+  grid: false                              # true if your sensor uses the opposite sign
+car:
+  name: Car
+  style: sedan                             # sedan | suv
+  color: "#ecebe6"
+battery:
+  style: wall                              # wall | rack
+house:
+  wall_color: "#d9cbb3"
+  roof_color: "#3d4b5c"
+weather_effects: false

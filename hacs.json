@@ -1,0 +1,6 @@
+{
+  "name": "Energy House Card",
+  "filename": "energy-house-card.js",
+  "render_readme": true,
+  "homeassistant": "2024.8.0"
+}

@@ -1,0 +1,5 @@
+type: custom:energy-house-card
+entities:
+  grid: sensor.grid_power
+  solar: sensor.solar_power
+  home: sensor.home_power
