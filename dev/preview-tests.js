@@ -33,24 +33,24 @@ window.addEventListener("DOMContentLoaded", async () => {
   test("Power units and SOC", () => {
     const card = fixture();
     assert(value(card, "solar") === "6.80 kW", "Solar units");
-    assert(value(card, "car") === "42%", "Vehicle SOC");
-    assert(status(card, "car") === "Charging · 4.40 kW", "kW conversion");
-    assert(value(card, "battery") === "54%", "Battery SOC");
+    assert(value(card, "car") === "↓ 4.40 kW" && status(card, "car") === "42 % · Charging", "kW conversion, car level");
+    assert(value(card, "battery") === "↓ 900 W" && status(card, "battery") === "54 % · Charging", "Power first, level second");
+    assert(value(card, "grid") === "← 300 W", "Export arrow");
   });
   test("Import, export, charging, discharge directions", () => {
     const card = fixture();
     assert(status(card, "grid") === "Export" && flow(card, "grid").contains("rev"), "Export direction");
-    assert(status(card, "battery").startsWith("Charging") && flow(card, "battery").contains("on") && !flow(card, "battery").contains("rev"), "Battery charging flows house -> battery");
+    assert(status(card, "battery").endsWith("Charging") && flow(card, "battery").contains("on") && !flow(card, "battery").contains("rev"), "Battery charging flows house -> battery");
     assert(flow(card, "car").contains("on") && !flow(card, "car").contains("rev"), "Car charging direction");
     card.hass = mockHass({ "sensor.demo_grid": mockState(100), "sensor.demo_battery_power": mockState(500), "sensor.demo_car_power": mockState(-2, "kW") });
-    assert(status(card, "grid") === "Import" && !flow(card, "grid").contains("rev"), "Import direction");
-    assert(status(card, "battery").startsWith("Discharging") && flow(card, "battery").contains("rev"), "Battery discharge direction");
-    assert(status(card, "car").startsWith("Discharging") && flow(card, "car").contains("rev"), "Vehicle discharge direction");
+    assert(status(card, "grid") === "Import" && value(card, "grid") === "→ 100 W" && !flow(card, "grid").contains("rev"), "Import direction");
+    assert(status(card, "battery").endsWith("Discharging") && value(card, "battery") === "↑ 500 W" && flow(card, "battery").contains("rev"), "Battery discharge direction");
+    assert(status(card, "car").endsWith("Discharging") && value(card, "car") === "↑ 2.00 kW" && flow(card, "car").contains("rev"), "Vehicle discharge direction");
   });
   test("Configured inversion and exact threshold", () => {
     const card = fixture({ ...mockConfig, invert: { grid: true, battery_power: true } });
     assert(status(card, "grid") === "Import", "Grid inversion");
-    assert(status(card, "battery").startsWith("Discharging"), "Battery inversion");
+    assert(status(card, "battery").endsWith("Discharging"), "Battery inversion");
     card.hass = mockHass({ "sensor.demo_grid": mockState(-10) });
     assert(!flow(card, "grid").contains("on"), "10 W must be inactive");
     card.hass = mockHass({ "sensor.demo_grid": mockState(-10.01) });
@@ -82,7 +82,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const entities = { ...mockConfig.entities };
     delete entities.battery_power;
     const card = fixture({ ...mockConfig, entities });
-    assert(status(card, "battery") === "" && value(card, "battery") === "54%", "Unknown activity");
+    assert(status(card, "battery") === "" && value(card, "battery") === "54 %", "Level only, no invented activity");
     assert(!card.shadowRoot.querySelector('[data-cable="battery"]'), "No cable without a power sensor");
     assert(eq(card, "battery"), "Battery still drawn");
   });
@@ -103,7 +103,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     card.setConfig({ ...mockConfig, animate: false, night: true });
     assert(card.shadowRoot.querySelector("ha-card").classList.contains("still"), "Animations disabled");
     assert(card.shadowRoot.querySelector("ha-card").classList.contains("night"), "Night override");
-    assert(value(card, "car") === "42%", "New config applied without next HA update");
+    assert(status(card, "car").startsWith("42 %"), "New config applied without next HA update");
   });
   test("Invalid configurations rejected explicitly", () => {
     for (const config of [
@@ -188,7 +188,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         card.setConfig(buildPlaygroundConfig(o));
         card.hass = buildPlaygroundHass(o);
         assertStraight(card, name);
-        for (const width of ["320px", "720px"]) {
+        for (const width of ["320px", "520px", "720px"]) {
           card.style.width = width;
           const bounds = card.getBoundingClientRect();
           const badges = [...card.shadowRoot.querySelectorAll(".badge")].map((b) => [b.id, b.getBoundingClientRect()]);
@@ -200,6 +200,27 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
     } finally { host.remove(); }
     assert(combos === 144, `Only ${combos} combinations checked`);
+  });
+  test("Narrow cards show readable tiles below the picture; wide cards overlay the picture", () => {
+    const card = fixture();
+    document.body.append(card);
+    try {
+      const svg = () => card.shadowRoot.querySelector(".stage").getBoundingClientRect();
+      const badges = () => [...card.shadowRoot.querySelectorAll(".badge")];
+      const px = (el, sel) => parseFloat(getComputedStyle(el.querySelector(sel)).fontSize);
+      card.style.width = "445px";
+      assert(badges().every((b) => b.getBoundingClientRect().top >= svg().bottom - 0.5), "Tiles must sit below the picture");
+      assert(badges().map((b) => b.id).join() === "b-solar,b-grid,b-battery,b-home,b-car", "Sources first");
+      for (const width of ["445px", "520px", "760px"]) {
+        card.style.width = width;
+        for (const b of badges()) {
+          assert(px(b, ".v") >= 14.5, `${width} ${b.id}: value ${px(b, ".v")}px`);
+          assert(px(b, ".l") >= 11 && px(b, ".s") >= 11, `${width} ${b.id}: label ${px(b, ".l")}px`);
+        }
+      }
+      card.style.width = "760px";
+      assert(badges().some((b) => b.getBoundingClientRect().top < svg().bottom), "Wide cards overlay the picture");
+    } finally { card.remove(); }
   });
   test("Cables are layered against the equipment they pass", () => {
     const o = { ...PLAYGROUND_DEFAULTS, solar: "both" };

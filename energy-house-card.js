@@ -4,7 +4,7 @@
  * The scene is rendered once per configuration; sensor updates only touch text, classes and attributes.
  */
 (() => {
-const VERSION = "0.1.0-beta";
+const VERSION = "0.1.0-beta.2";
 const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]);
@@ -292,18 +292,23 @@ for (const cable of CABLES) {
   });
 }
 
-// Badges: fixed positions in % of the stage (left, top).
+// Badges: fixed positions in % of the picture (left, top) on wide cards; on narrow cards they
+// form a row of tiles below the picture in this order (sources first, then consumers).
 const BADGES = [
-  { id: "grid", label: "Grid", icon: "mdi:transmission-tower", color: COLORS.grid, pos: [16, 20], power: "grid" },
   { id: "solar", label: "Solar", icon: "mdi:solar-power-variant", color: COLORS.solar, pos: [52, 14], power: "solar" },
+  { id: "solar_ground", label: "Solar array", icon: "mdi:solar-power-variant", color: COLORS.solar, pos: [66, 90], power: "solar_ground" },
+  { id: "grid", label: "Grid", icon: "mdi:transmission-tower", color: COLORS.grid, pos: [16, 20], power: "grid" },
+  { id: "battery", label: "Battery", icon: "mdi:battery", color: COLORS.battery, pos: [86, 72], power: "battery_power", soc: "battery_soc" },
   { id: "home", label: "Home", icon: "mdi:home-lightning-bolt", color: COLORS.home, pos: [16, 44], power: "home" },
   { id: "heat_pump", label: "Heat pump", icon: "mdi:heat-pump", color: COLORS.heat_pump, pos: [87, 40], power: "heat_pump" },
-  { id: "battery", label: "Battery", icon: "mdi:battery", color: COLORS.battery, pos: [86, 72], power: "battery_power", soc: "battery_soc" },
   { id: "car", label: "Car", icon: "mdi:car-electric", color: COLORS.car, pos: [22, 86], power: "car_power", soc: "car_soc" },
-  { id: "solar_ground", label: "Solar array", icon: "mdi:solar-power-variant", color: COLORS.solar, pos: [66, 90], power: "solar_ground" },
 ];
+// Direction words and arrows for positive / negative readings (same arrows as Home Assistant's
+// energy card: grid → import ← export; storage ↓ in ↑ out).
 const STATUS = {
-  grid: ["Import", "Export"], battery: ["Discharging", "Charging"], car: ["Charging", "Discharging"],
+  grid: ["Import", "Export", "→", "←"],
+  battery: ["Discharging", "Charging", "↑", "↓"],
+  car: ["Charging", "Discharging", "↓", "↑"],
 };
 
 const POWER_KEYS = ["grid", "solar", "solar_ground", "home", "battery_power", "car_power", "heat_pump"];
@@ -318,7 +323,9 @@ ha-card.night { --ehc-bg: linear-gradient(160deg,#121521 0%,#15111d 55%,#2b1230 
 ha-card.themed { --ehc-bg: var(--ha-card-background, var(--card-background-color)); color: var(--primary-text-color); }
 .hdr { display:flex; align-items:center; gap:8px; padding:14px 16px 0; font-size:1.15em; font-weight:500; position:relative; z-index:2; }
 .hdr ha-icon { --mdc-icon-size:20px; }
-.stage { position:relative; width:100%; aspect-ratio:${VB_W}/${VB_H}; container-type:inline-size; }
+ha-card { container: ehc / inline-size; }
+.wrap { position:relative; }
+.stage { position:relative; width:100%; aspect-ratio:${VB_W}/${VB_H}; }
 .stage > svg { position:absolute; inset:0; width:100%; height:100%; display:block; }
 .win-lit { opacity:var(--lit,.3); transition:opacity 2s; }
 .night-ov { fill:#0b1030; opacity:0; transition:opacity 2s; pointer-events:none; }
@@ -341,25 +348,33 @@ ha-card.night .hdr { background:rgba(11,16,48,.35); }
 .active .fan { animation:ehc-spin 1.1s linear infinite; }
 .pv-glint { opacity:0; pointer-events:none; }
 .solar-on .pv-glint { animation:ehc-glint 5s ease-in-out infinite; }
-.badge.on .ic { animation:ehc-ring 2.8s ease-out infinite; }
 @keyframes ehc-blink { 50% { opacity:.45; } }
 @keyframes ehc-breathe { 0%,100% { opacity:.55; } 50% { opacity:.22; } }
 @keyframes ehc-soc { 50% { opacity:.7; } }
 @keyframes ehc-spin { to { transform:rotate(360deg); } }
 @keyframes ehc-glint { 0%,62%,100% { opacity:0; } 72% { opacity:.16; } }
-@keyframes ehc-ring { 0% { box-shadow:0 0 0 0 color-mix(in srgb, var(--c) 45%, transparent); } 70%,100% { box-shadow:0 0 0 .45em transparent; } }
-.badge { position:absolute; transform:translate(-50%,-50%); display:flex; align-items:center; gap:.55em; padding:.5em .85em .5em .45em; max-width:29%; box-sizing:border-box;
-  border-radius:16px; background:rgba(20,22,30,.94); border:1px solid rgba(255,255,255,.12); cursor:pointer;
-  width:max-content; font-size:clamp(8px,2.15cqw,15px); line-height:1.2; box-shadow:0 4px 14px rgba(0,0,0,.3); color:#eef1f6; }
+.badges { position:absolute; inset:0 0 auto; aspect-ratio:${VB_W}/${VB_H}; pointer-events:none; }
+.badge { position:absolute; transform:translate(-50%,-50%); display:flex; align-items:center; gap:.5em; padding:.45em .8em .45em .45em; max-width:30%; box-sizing:border-box;
+  border-radius:14px; background:rgba(20,22,30,.9); border:1px solid rgba(255,255,255,.06); cursor:pointer; pointer-events:auto;
+  width:max-content; font-size:clamp(12px,2.1cqw,15px); line-height:1.25; box-shadow:0 4px 14px rgba(0,0,0,.3); color:#eef1f6; transition:border-color .6s; }
 .badge:focus-visible { outline:2px solid var(--c); outline-offset:2px; }
-.badge.on { border-color: color-mix(in srgb, var(--c) 55%, transparent); }
-.badge .ic { flex-shrink:0; width:2.1em; height:2.1em; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, var(--c) 22%, transparent); color:var(--c); }
-.badge .ic ha-icon { --mdc-icon-size:1.3em; }
-.badge .v { font-weight:700; font-size:1.15em; white-space:nowrap; }
+.badge.on { border-color: color-mix(in srgb, var(--c) 60%, transparent); }
+.badge .ic { flex-shrink:0; width:1.9em; height:1.9em; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, var(--c) 18%, transparent); color:var(--c); }
+.badge .ic ha-icon { --mdc-icon-size:1.25em; }
 .badge .copy { min-width:0; }
-.badge .l { font-size:.72em; letter-spacing:.08em; text-transform:uppercase; opacity:.65; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.badge .s { font-size:.78em; color:var(--c); margin-top:.15em; }
+.badge .v { font-weight:700; font-size:1.25em; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.badge .l { font-size:.92em; opacity:.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.badge .s { font-size:.92em; color:var(--c); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .badge .s:empty { display:none; }
+/* Narrow cards: the picture stays an illustration, the numbers move into readable tiles below it. */
+@container ehc (max-width: 500px) {
+  .badges { position:static; aspect-ratio:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:6px; padding:2px 12px 12px; }
+  .badge { position:static; transform:none; max-width:none; width:auto; font-size:13px; box-shadow:none; background:rgba(255,255,255,.04); border-radius:12px; padding:.5em .7em; align-items:flex-start; }
+  .badge .ic { width:auto; height:auto; background:none; margin-top:.15em; }
+  .badge .ic ha-icon { --mdc-icon-size:18px; }
+  .badge .v { font-size:1.2em; }
+  .badge .l { font-size:.85em; }
+}
 .drops { position:absolute; inset:0; pointer-events:none; overflow:hidden; display:none; }
 ha-card.rain .drops { display:block; }
 .drops i { position:absolute; top:-10%; width:1px; height:5%; background:linear-gradient(transparent, rgba(200,210,255,.45)); animation:ehc-rain linear infinite; }
@@ -560,13 +575,13 @@ class EnergyHouseCard extends HTMLElement {
     this.shadowRoot.innerHTML = `<style>${STYLE}</style>
       <ha-card class="${c.theme_background ? "themed" : ""} ${c.animate ? "" : "still"} ${this._visible === false ? "paused" : ""}">
         ${c.title ? `<div class="hdr"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>${escapeHTML(c.title)}</span></div>` : ""}
-        <div class="stage">
+        <div class="wrap"><div class="stage">
           <svg viewBox="0 0 ${VB_W} ${VB_H}" aria-hidden="true">
             <defs><linearGradient id="ehc-panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a5d86"/><stop offset=".55" stop-color="#1b2f4d"/><stop offset="1" stop-color="#11203a"/></linearGradient><radialGradient id="ehc-charge"><stop offset="0" stop-color="#69f0ae" stop-opacity=".85"/><stop offset=".55" stop-color="#69f0ae" stop-opacity=".35"/><stop offset="1" stop-color="#69f0ae" stop-opacity="0"/></radialGradient></defs>
             <g class="scene">${ART.ground()}${runsOver("ground")}${equipment}</g>
             <rect class="night-ov" width="${VB_W}" height="${VB_H}"/>
-          </svg>${drops}${badges}
-        </div>
+          </svg>${drops}
+        </div><div class="badges">${badges}</div></div>
       </ha-card>`;
     this._card = this.shadowRoot.querySelector("ha-card");
     const open = (event) => {
@@ -595,11 +610,14 @@ class EnergyHouseCard extends HTMLElement {
     const el = this.shadowRoot.getElementById(`b-${b.id}`);
     if (!el) return;
     const active = power != null && Math.abs(power) > this._cfg.threshold;
-    const [positive, negative] = STATUS[b.id] || [];
+    const [positive, negative, up, down] = STATUS[b.id] || [];
     const status = power == null ? (this._has(b.power) ? "Unavailable" : "") :
       !active ? (positive ? "Idle" : "") : positive ? (power > 0 ? positive : negative) : "";
-    const value = soc != null ? `${Math.round(soc)}%` : power != null ? this._fmtW(power) : "—";
-    const detail = [status, soc != null && active ? this._fmtW(power) : ""].filter(Boolean).join(" · ");
+    const level = soc == null ? "" : `${Math.round(soc)} %`;
+    // The big number is always power (with a direction arrow); the level is secondary.
+    const arrow = active && up ? `${power > 0 ? up : down} ` : "";
+    const value = power != null ? arrow + this._fmtW(power) : level || "—";
+    const detail = [power != null ? level : "", status].filter(Boolean).join(" · ");
     el.classList.toggle("on", active);
     el.querySelector(".v").textContent = value;
     el.querySelector(".s").textContent = detail;

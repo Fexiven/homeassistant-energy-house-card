@@ -15,7 +15,7 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 </div>
 
 > [!NOTE]
-> **Beta (0.1.0-beta).** Options may still change before 1.0. Feedback and issues are very welcome.
+> **Beta (0.1.0-beta.2).** Options may still change before 1.0. Feedback and issues are very welcome.
 
 ## ✨ Features
 
@@ -23,6 +23,8 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 - 🔆 **Everything a modern home has:** rooftop and ground-mounted solar, grid, home battery, heat pump, EV with charger.
 - 🌊 **Live energy flows.** Dots run along each cable in the direction of the power, faster as it increases.
 - 🌙 **Day & night.** Windows light up after sunset (from `sun.sun`); optional rain and snow from your weather entity.
+- 🔢 **Easy to read.** The big number is always power, with an arrow for its direction (→ import, ↓ charging); battery and car levels sit underneath.
+- 📱 **Fits any column.** On narrow cards the numbers move into tiles below the picture instead of shrinking.
 - 🎛️ **Visual editor** built in, plus a card picker that pre-selects your sensors.
 - 👆 **Tap any badge** to open the sensor's more-info dialog.
 - 🪶 **One small JavaScript file**, no libraries. Animations are pure CSS, pause off-screen and respect *reduced motion*.
@@ -30,11 +32,11 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 <table>
   <tr>
     <td width="50%"><img src="https://raw.githubusercontent.com/Fexiven/homeassistant-energy-house-card/main/docs/preview-night.png" alt="Night scene with lit windows, an SUV and a rack battery"></td>
-    <td width="50%"><img src="https://raw.githubusercontent.com/Fexiven/homeassistant-energy-house-card/main/docs/preview-minimal.png" alt="Minimal setup with only roof solar and grid"></td>
+    <td width="50%"><img src="https://raw.githubusercontent.com/Fexiven/homeassistant-energy-house-card/main/docs/preview-compact.png" alt="Narrow card with the readings as tiles below the picture"></td>
   </tr>
   <tr>
     <td align="center"><sub>At night — SUV, rack battery, custom car color</sub></td>
-    <td align="center"><sub>Minimal setup — just solar, grid and home</sub></td>
+    <td align="center"><sub>Narrow column — readings move into tiles</sub></td>
   </tr>
 </table>
 
@@ -54,7 +56,7 @@ While in beta, enable **Show beta versions** for the repository in HACS.
 1. Download `energy-house-card.js` from the
    [latest release](https://github.com/Fexiven/homeassistant-energy-house-card/releases) into `/config/www/`.
 2. **Settings → Dashboards → ⋮ → Resources → Add resource**:
-   `/local/energy-house-card.js?v=0.1.0-beta`, type **JavaScript module**.
+   `/local/energy-house-card.js?v=0.1.0-beta.2`, type **JavaScript module**.
 3. Reload the browser.
 
 ## 🚀 Quick start
@@ -165,13 +167,13 @@ python3 -m http.server 8766 --bind 127.0.0.1
 | `/dev/preview.html` | Interactive playground with equipment toggles and sliders |
 | `/dev/preview.html?test` | Runs the browser test suite |
 | `/dev/preview.html?set=solar:both,time:night` | Preselects playground controls |
-| `/dev/screenshot.html?time=night&car=suv` | Bare card at 760 px, used for the README images |
+| `/dev/screenshot.html?time=night&car=suv&w=445` | Bare card (default 760 px wide), used for the README images |
 
 README images are taken with a headless Chromium browser, for example:
 
 ```sh
 msedge --headless=new --hide-scrollbars --default-background-color=00000000 \
-  --force-device-scale-factor=2 --window-size=760,582 \
+  --force-device-scale-factor=2 --window-size=760,575 \
   --screenshot=docs/preview.png "http://127.0.0.1:8766/dev/screenshot.html"
 ```
 
