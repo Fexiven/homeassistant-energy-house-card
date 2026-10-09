@@ -226,6 +226,22 @@ window.addEventListener("DOMContentLoaded", async () => {
       assert(badges().some((b) => b.getBoundingClientRect().top < svg().bottom), "Wide cards overlay the picture");
     } finally { card.remove(); }
   });
+  test("Layout option forces wide or compact regardless of width", () => {
+    const card = fixture({ ...mockConfig, layout: "compact" });
+    document.body.append(card);
+    try {
+      const below = () => [...card.shadowRoot.querySelectorAll(".badge")].every((b) =>
+        b.getBoundingClientRect().top >= card.shadowRoot.querySelector(".stage").getBoundingClientRect().bottom - 0.5);
+      card.style.width = "760px";
+      assert(below(), "compact must put tiles below a wide card");
+      card.setConfig({ ...mockConfig, layout: "wide" });
+      card.style.width = "445px";
+      assert(!below(), "wide must keep badges on a narrow card");
+      card.setConfig({ ...mockConfig, layout: "auto" });
+      assert(below(), "auto must switch on a narrow card");
+      throws(() => card.setConfig({ ...mockConfig, layout: "big" }));
+    } finally { card.remove(); }
+  });
   test("Cables are layered against the equipment they pass", () => {
     const o = { ...PLAYGROUND_DEFAULTS, solar: "both" };
     const card = fixture(buildPlaygroundConfig(o), buildPlaygroundHass(o)), root = card.shadowRoot;

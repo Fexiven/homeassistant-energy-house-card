@@ -15,7 +15,7 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 </div>
 
 > [!NOTE]
-> **Beta (0.1.0-beta.3).** Options may still change before 1.0. Feedback and issues are very welcome.
+> **Beta (0.1.0-beta.4).** Options may still change before 1.0. Feedback and issues are very welcome.
 
 ## ✨ Features
 
@@ -24,7 +24,7 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 - 🌊 **Live energy flows.** Dots run along each cable in the direction of the power, faster as it increases.
 - 🌙 **Day & night.** Windows light up after sunset (from `sun.sun`); optional rain and snow from your weather entity.
 - 🔢 **Easy to read.** The big number is always power, with an arrow for its direction (→ import, ↓ charging); battery and car levels sit underneath.
-- 📱 **Fits any column.** On narrow cards the numbers move into tiles below the picture instead of shrinking.
+- 📱 **Fits any column.** On narrow cards the numbers move into tiles below the picture instead of shrinking — or pick the layout yourself with `layout: wide | compact`.
 - 🎛️ **Visual editor** built in, plus a card picker that pre-selects your sensors.
 - 👆 **Tap any badge** to open the sensor's more-info dialog.
 - 🪶 **One small JavaScript file**, no libraries. Animations are pure CSS, pause off-screen and respect *reduced motion*.
@@ -56,7 +56,7 @@ While in beta, enable **Show beta versions** for the repository in HACS.
 1. Download `energy-house-card.js` from the
    [latest release](https://github.com/Fexiven/homeassistant-energy-house-card/releases) into `/config/www/`.
 2. **Settings → Dashboards → ⋮ → Resources → Add resource**:
-   `/local/energy-house-card.js?v=0.1.0-beta.3`, type **JavaScript module**.
+   `/local/energy-house-card.js?v=0.1.0-beta.4`, type **JavaScript module**.
 3. Reload the browser.
 
 ## 🚀 Quick start
@@ -140,6 +140,7 @@ Unavailable or non-numeric readings show **—** and stop the flow — never a f
 | Option | Default | Description |
 | --- | --- | --- |
 | `title` | `Energy` | Card heading; `""` hides it |
+| `layout` | `auto` | `auto` picks by card width (≤ 500 px → compact), `wide` keeps readings on the picture, `compact` puts them in tiles below |
 | `threshold` | `10` | A flow is active above this absolute power (W) |
 | `animate` | `true` | `false` for a static picture |
 | `night` | from `sun` | Force day (`false`) or night (`true`) |

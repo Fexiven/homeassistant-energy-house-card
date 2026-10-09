@@ -4,7 +4,7 @@
  * The scene is rendered once per configuration; sensor updates only touch text, classes and attributes.
  */
 (() => {
-const VERSION = "0.1.0-beta.3";
+const VERSION = "0.1.0-beta.4";
 const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]);
@@ -316,6 +316,14 @@ const ENTITY_KEYS = [...POWER_KEYS, "battery_soc", "car_soc", "sun", "weather"];
 const ENTITY_ID = /^[a-z0-9_]+\.[a-z0-9_]+$/;
 const HEX = /^#[0-9a-f]{3}([0-9a-f]{3})?$/i;
 
+const compactRules = (scope) => `
+  ${scope} .badges { position:static; aspect-ratio:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:6px; padding:2px 12px 12px; }
+  ${scope} .badge { position:static; transform:none; max-width:none; width:auto; font-size:13px; box-shadow:none; background:rgba(255,255,255,.04); border-radius:12px; padding:.5em .7em; align-items:flex-start; }
+  ${scope} .badge .ic { width:auto; height:auto; background:none; margin-top:.15em; }
+  ${scope} .badge .ic ha-icon { --mdc-icon-size:18px; }
+  ${scope} .badge .v { font-size:1.2em; }
+  ${scope} .badge .l { font-size:.85em; }`;
+
 const STYLE = `
 :host { display:block; }
 ha-card { display:block; overflow:hidden; position:relative; border-radius:var(--ha-card-border-radius,16px); background: var(--ehc-bg, linear-gradient(160deg,#1c2230 0%,#191a26 55%,#2a1730 100%)); color:#eef1f6; }
@@ -366,15 +374,10 @@ ha-card.night .hdr { background:rgba(11,16,48,.35); }
 .badge .l { font-size:.92em; opacity:.7; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .badge .s { font-size:.92em; color:var(--c); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .badge .s:empty { display:none; }
-/* Narrow cards: the picture stays an illustration, the numbers move into readable tiles below it. */
-@container ehc (max-width: 500px) {
-  .badges { position:static; aspect-ratio:auto; display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:6px; padding:2px 12px 12px; }
-  .badge { position:static; transform:none; max-width:none; width:auto; font-size:13px; box-shadow:none; background:rgba(255,255,255,.04); border-radius:12px; padding:.5em .7em; align-items:flex-start; }
-  .badge .ic { width:auto; height:auto; background:none; margin-top:.15em; }
-  .badge .ic ha-icon { --mdc-icon-size:18px; }
-  .badge .v { font-size:1.2em; }
-  .badge .l { font-size:.85em; }
-}
+/* Compact layout: the picture stays an illustration, the numbers move into readable tiles below it.
+   'auto' switches to it on cards up to 500 px wide; 'compact' always uses it, 'wide' never. */
+@container ehc (max-width: 500px) { ${compactRules(".layout-auto")} }
+${compactRules(".layout-compact")}
 .drops { position:absolute; inset:0; pointer-events:none; overflow:hidden; display:none; }
 ha-card.rain .drops { display:block; }
 .drops i { position:absolute; top:-10%; width:1px; height:5%; background:linear-gradient(transparent, rgba(200,210,255,.45)); animation:ehc-rain linear infinite; }
@@ -385,7 +388,8 @@ ha-card.snow .drops i { width:3px; height:3px; border-radius:50%; background:rgb
 @media (prefers-reduced-motion: reduce) { ha-card * { animation:none !important; } }
 `;
 
-const DEFAULTS = { title: "Energy", threshold: 10, animate: true, theme_background: false, weather_effects: false };
+const DEFAULTS = { title: "Energy", layout: "auto", threshold: 10, animate: true, theme_background: false, weather_effects: false };
+const LAYOUTS = ["auto", "wide", "compact"];
 
 function normalizeConfig(config) {
   const fail = (message) => { throw new Error(`energy-house-card: ${message}`); };
@@ -401,6 +405,7 @@ function normalizeConfig(config) {
   entities.sun ??= "sun.sun";
   if (config.threshold != null && (typeof config.threshold !== "number" || !Number.isFinite(config.threshold) || config.threshold < 0)) fail("'threshold' must be a non-negative number");
   if (config.title != null && typeof config.title !== "string") fail("'title' must be text");
+  if (config.layout != null && !LAYOUTS.includes(config.layout)) fail("'layout' must be 'auto', 'wide' or 'compact'");
   for (const key of ["animate", "night", "theme_background", "weather_effects"]) {
     if (config[key] != null && typeof config[key] !== "boolean") fail(`'${key}' must be true or false`);
   }
@@ -460,6 +465,9 @@ const CONFIG_FORM = {
       ] },
     ] },
     { type: "expandable", name: "", flatten: true, title: "Display", schema: [
+      { name: "layout", selector: { select: { mode: "dropdown", options: [
+        { value: "auto", label: "Automatic (by card width)" }, { value: "wide", label: "Wide: readings on the picture" }, { value: "compact", label: "Compact: readings below the picture" },
+      ] } } },
       { name: "threshold", selector: { number: { min: 0, max: 1000, step: 1, mode: "box", unit_of_measurement: "W" } } },
       { type: "grid", name: "", flatten: true, schema: [
         { name: "animate", selector: { boolean: {} } }, { name: "theme_background", selector: { boolean: {} } },
@@ -472,7 +480,7 @@ const CONFIG_FORM = {
     solar_ground: "Ground array power", battery_power: "Battery power (+ discharge / − charge)", battery_soc: "Battery level (%)",
     car_power: "Car charging power", car_soc: "Car battery level (%)", heat_pump: "Heat pump power", name: "Name", style: "Style",
     color: "Color (hex)", color_entity: "Color from entity", wall_color: "Wall color (hex)", roof_color: "Roof color (hex)",
-    threshold: "Active above", animate: "Animations", theme_background: "Use theme background", weather_effects: "Rain/snow effect",
+    threshold: "Active above", layout: "Layout", animate: "Animations", theme_background: "Use theme background", weather_effects: "Rain/snow effect",
     weather: "Weather entity",
   })[s.name],
   assertConfig: (config) => normalizeConfig(config),
@@ -576,7 +584,7 @@ class EnergyHouseCard extends HTMLElement {
     }).join("");
     const drops = c.weather_effects ? `<div class="drops">${Array.from({ length: 28 }, (_, i) => `<i style="left:${(i * 37) % 100 + 4}%;animation-duration:${0.7 + ((i * 13) % 7) / 10}s;animation-delay:-${((i * 7) % 10) / 10}s"></i>`).join("")}</div>` : "";
     this.shadowRoot.innerHTML = `<style>${STYLE}</style>
-      <ha-card class="${c.theme_background ? "themed" : ""} ${c.animate ? "" : "still"} ${this._visible === false ? "paused" : ""}">
+      <ha-card class="layout-${c.layout} ${c.theme_background ? "themed" : ""} ${c.animate ? "" : "still"} ${this._visible === false ? "paused" : ""}">
         ${c.title ? `<div class="hdr"><ha-icon icon="mdi:lightning-bolt"></ha-icon><span>${escapeHTML(c.title)}</span></div>` : ""}
         <div class="wrap"><div class="stage">
           <svg viewBox="0 0 ${VB_W} ${VB_H}" aria-hidden="true">

@@ -10,7 +10,7 @@ const q = new URLSearchParams(location.search);
 const o = { ...PLAYGROUND_DEFAULTS, solar: q.get("solar") || "both", heatPump: q.get("pump") !== "false", time: q.get("time") || "day", car: q.get("car") || "sedan", battery: q.get("battery") || "wall", carColor: q.get("color") || "#ecebe6" };
 const card = document.getElementById("c");
 card.style.width = (q.get("w") || 760) + "px";
-card.setConfig({ ...buildPlaygroundConfig(o), animate: false });
+card.setConfig({ ...buildPlaygroundConfig(o), animate: false, ...(q.get("layout") && { layout: q.get("layout") }) });
 card.hass = buildPlaygroundHass(o);
 document.title = Math.ceil(card.getBoundingClientRect().height);
 </script></body></html>

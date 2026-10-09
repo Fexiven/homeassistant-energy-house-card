@@ -2,6 +2,7 @@
 # equipment and cables disappear from the fixed scene.
 type: custom:energy-house-card
 title: Energy
+layout: auto                               # auto | wide | compact
 entities:
   grid: sensor.grid_power                  # + import / − export
   home: sensor.home_power
