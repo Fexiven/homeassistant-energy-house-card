@@ -4,6 +4,8 @@ const ICON_PATHS = {
   "mdi:transmission-tower": "M12 2 5 22m7-20 7 20M7 9h10M6 14h12M9 4h6M5 22l13-8M19 22 6 14",
   "mdi:home-lightning-bolt": "M3 11 12 3l9 8M5 10v11h14V10M13 10l-4 6h4l-1 4 5-7h-4z",
   "mdi:car-electric": "M4 11l2-6h12l2 6M3 11h18v8H3zM5 19v3m14-3v3M6 14h2m8 0h2",
+  "mdi:heat-pump": "M3 5h18v14H3zM12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M12 12V7.5M12 12l3.9 2.25M12 12l-3.9 2.25",
+  "mdi:battery": "M9 2h6v2h3v18H6V4h3zM9 13h6v6H9z",
 };
 const previewWidth = Number(new URLSearchParams(location.search).get("viewport"));
 if (Number.isFinite(previewWidth) && previewWidth >= 320 && previewWidth <= 1920) {
@@ -20,7 +22,7 @@ customElements.define("ha-icon", class extends HTMLElement {
   attributeChangedCallback() { this.render(); }
   render() {
     const icon = this.getAttribute("icon");
-    const path = ICON_PATHS[icon] || "M9 2h6v3h4v17H5V5h4zM9 9h6m-6 4h6m-6 4h6";
+    const path = ICON_PATHS[icon] || (icon?.startsWith("mdi:battery") && ICON_PATHS["mdi:battery"]) || "M9 2h6v3h4v17H5V5h4zM9 9h6m-6 4h6m-6 4h6";
     this.shadowRoot.innerHTML = `<style>:host{display:inline-flex;width:var(--mdc-icon-size,24px);height:var(--mdc-icon-size,24px)}svg{width:100%;height:100%}</style><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
 });

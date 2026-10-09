@@ -323,6 +323,7 @@ ha-card.themed { --ehc-bg: var(--ha-card-background, var(--card-background-color
 .win-lit { opacity:var(--lit,.3); transition:opacity 2s; }
 .night-ov { fill:#0b1030; opacity:0; transition:opacity 2s; pointer-events:none; }
 ha-card.night .night-ov { opacity:.35; }
+ha-card.night .hdr { background:rgba(11,16,48,.35); }
 .flow .base { fill:none; stroke-width:1.6; opacity:.16; stroke-linejoin:round; stroke-linecap:round; transition:opacity .6s; }
 .flow .glow { fill:none; stroke-width:7; opacity:0; stroke-linejoin:round; stroke-linecap:round; transition:opacity .6s; }
 .flow .dots { fill:none; stroke:#fff; stroke-width:2.4; stroke-linecap:round; stroke-dasharray:0.1 11; stroke-dashoffset:var(--o,0px); opacity:0; animation:ehc-move var(--dur,1.5s) linear infinite; animation-play-state:paused; }
