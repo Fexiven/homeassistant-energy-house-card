@@ -126,6 +126,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     card.shadowRoot.querySelector("#b-battery").dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, composed: true }));
     assert(opened === "sensor.demo_battery_soc", "Keyboard opens SOC entity");
   });
+  test("Sections view lets the card grow with its content", () => {
+    const options = document.createElement("energy-house-card").getGridOptions();
+    assert(!("rows" in options) && !("min_rows" in options), "A fixed row count clips the tiles on narrow cards");
+  });
   test("Visual editor schema and stub config", () => {
     const Card = customElements.get("energy-house-card");
     const form = Card.getConfigForm();

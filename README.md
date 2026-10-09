@@ -15,7 +15,7 @@ Solar, grid, battery, heat pump and EV — with animated power flowing through e
 </div>
 
 > [!NOTE]
-> **Beta (0.1.0-beta.2).** Options may still change before 1.0. Feedback and issues are very welcome.
+> **Beta (0.1.0-beta.3).** Options may still change before 1.0. Feedback and issues are very welcome.
 
 ## ✨ Features
 
@@ -56,7 +56,7 @@ While in beta, enable **Show beta versions** for the repository in HACS.
 1. Download `energy-house-card.js` from the
    [latest release](https://github.com/Fexiven/homeassistant-energy-house-card/releases) into `/config/www/`.
 2. **Settings → Dashboards → ⋮ → Resources → Add resource**:
-   `/local/energy-house-card.js?v=0.1.0-beta.2`, type **JavaScript module**.
+   `/local/energy-house-card.js?v=0.1.0-beta.3`, type **JavaScript module**.
 3. Reload the browser.
 
 ## 🚀 Quick start

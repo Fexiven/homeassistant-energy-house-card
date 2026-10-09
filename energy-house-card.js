@@ -4,7 +4,7 @@
  * The scene is rendered once per configuration; sensor updates only touch text, classes and attributes.
  */
 (() => {
-const VERSION = "0.1.0-beta.2";
+const VERSION = "0.1.0-beta.3";
 const escapeHTML = (value) => String(value).replace(/[&<>"']/g, (c) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
 })[c]);
@@ -493,8 +493,11 @@ class EnergyHouseCard extends HTMLElement {
     return { entities: Object.fromEntries(Object.entries(entities).filter(([, id]) => id)) };
   }
 
-  getCardSize() { return 6; }
-  getGridOptions() { return { columns: 12, rows: 6, min_columns: 6, min_rows: 4 }; }
+  // Masonry estimate in 50 px units: the picture plus, on narrow cards, the tiles below it.
+  getCardSize() { return 9; }
+  // No `rows`: in sections view the card takes the height of its content, which grows when
+  // narrow cards move the readings below the picture.
+  getGridOptions() { return { columns: 12, min_columns: 6 }; }
 
   connectedCallback() {
     if (!this._observer && typeof IntersectionObserver !== "undefined") {
